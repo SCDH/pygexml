@@ -97,6 +97,28 @@ def test_textline_simple_parsing_example() -> None:
     assert tl.text == "tl-text"
 
 
+def test_textline_lowest_text_equiv_index() -> None:
+    tl = TextLine.from_xml(etree.fromstring("""
+        <TextLine id="tl-id">
+            <Coords points="17,42 1,2"/>
+            <TextEquiv index="1"><Unicode>secondary</Unicode></TextEquiv>
+            <TextEquiv index="0"><Unicode>primary</Unicode></TextEquiv>
+        </TextLine>
+    """))
+    assert tl.text == "primary"
+
+
+def test_textline_missing_text_equiv_index_zero() -> None:
+    tl = TextLine.from_xml(etree.fromstring("""
+        <TextLine id="tl-id">
+            <Coords points="17,42 1,2"/>
+            <TextEquiv index="1"><Unicode>secondary</Unicode></TextEquiv>
+            <TextEquiv><Unicode>primary</Unicode></TextEquiv>
+        </TextLine>
+    """))
+    assert tl.text == "primary"
+
+
 def test_textline_wrong_element() -> None:
     with pytest.raises(Exception, match="Wrong element given"):
         TextLine.from_xml(etree.fromstring("<WRONG>!!!</WRONG>"))

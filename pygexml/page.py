@@ -136,7 +136,11 @@ class TextLine(LayoutLine, DataClassJsonMixin):
             raise PageXMLError("No Coords found")
         if "points" not in coords_element.attrib:
             raise PageXMLError("Coords has no points attribute")
-        text_equiv = find_child(element, "TextEquiv")
+        text_equiv = min(
+            find_children(element, "TextEquiv"),
+            key=lambda te: int(te.attrib.get("index", 0)),
+            default=None,
+        )
         text_element = (
             find_child(text_equiv, "Unicode") if text_equiv is not None else None
         )
