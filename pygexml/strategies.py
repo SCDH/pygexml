@@ -49,7 +49,11 @@ def st_simple_text(**kwargs):
 
 
 st_text_lines = st.builds(
-    TextLine, id=st_simple_text(), coords=st_coords, text=st_xml_text()
+    TextLine,
+    id=st_simple_text(),
+    coords=st_coords,
+    text=st_xml_text(),
+    confidence=st.one_of(st.none(), st.floats(min_value=0, max_value=1)),
 )
 
 st_text_regions = st.builds(

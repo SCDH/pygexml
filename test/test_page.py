@@ -108,6 +108,16 @@ def test_textline_lowest_text_equiv_index() -> None:
     assert tl.text == "primary"
 
 
+def test_textline_parses_confidence() -> None:
+    tl = TextLine.from_xml(etree.fromstring("""
+        <TextLine id="tl-id">
+            <Coords points="17,42 1,2"/>
+            <TextEquiv conf="0.932"><Unicode>tl-text</Unicode></TextEquiv>
+        </TextLine>
+    """))
+    assert tl.confidence == 0.932
+
+
 def test_textline_missing_text_equiv_index_zero() -> None:
     tl = TextLine.from_xml(etree.fromstring("""
         <TextLine id="tl-id">
@@ -232,7 +242,12 @@ def test_textline_words(tl: TextLine) -> None:
 
 
 def test_textline_serialization_roundtrip() -> None:
-    tl = TextLine(id="tl-id", coords=Coords.parse("1,2 3,4"), text="foo bar")
+    tl = TextLine(
+        id="tl-id",
+        coords=Coords.parse("1,2 3,4"),
+        text="foo bar",
+        confidence=0.932,
+    )
     assert TextLine.from_dict(tl.to_dict()) == tl
 
 
@@ -523,7 +538,14 @@ def test_page_from_string() -> None:
         "b": TextRegion(
             id="b",
             coords=Coords.parse("1,2 3,4"),
-            textlines={"c": TextLine(id="c", coords=Coords.parse("5,6 7,8"), text="d")},
+            textlines={
+                "c": TextLine(
+                    id="c",
+                    coords=Coords.parse("5,6 7,8"),
+                    text="d",
+                    confidence=0.932,
+                )
+            },
         )
     }
 
@@ -559,7 +581,14 @@ def test_from_xml_file_example(tmp_path: Path) -> None:
         "b": TextRegion(
             id="b",
             coords=Coords.parse("1,2 3,4"),
-            textlines={"c": TextLine(id="c", coords=Coords.parse("5,6 7,8"), text="d")},
+            textlines={
+                "c": TextLine(
+                    id="c",
+                    coords=Coords.parse("5,6 7,8"),
+                    text="d",
+                    confidence=0.932,
+                )
+            },
         )
     }
     assert result == Page.from_xml_string(content)

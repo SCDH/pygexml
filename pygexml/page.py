@@ -124,6 +124,7 @@ class PageLayout(DataClassJsonMixin):
 @dataclass
 class TextLine(LayoutLine, DataClassJsonMixin):
     text: str
+    confidence: float | None = None
 
     @classmethod
     def from_xml(cls, element: Element) -> "TextLine":
@@ -150,6 +151,11 @@ class TextLine(LayoutLine, DataClassJsonMixin):
             id=str(element.attrib["id"]),
             coords=Coords.parse(str(coords_element.attrib["points"])),
             text=text_element.text if text_element.text is not None else "",
+            confidence=(
+                float(text_equiv.attrib["conf"])
+                if text_equiv is not None and "conf" in text_equiv.attrib
+                else None
+            ),
         )
 
     @classmethod
