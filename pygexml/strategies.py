@@ -7,7 +7,7 @@ import hypothesis.strategies as st
 
 from pygexml.geometry import Point, Box, Polygon
 from pygexml.image import Image
-from pygexml.page import Coords, Page, TextLine, TextRegion
+from pygexml.page import Coords, Label, Page, TextLine, TextRegion
 
 st_points = st.builds(Point, x=st.integers(min_value=0), y=st.integers(min_value=0))
 
@@ -56,6 +56,13 @@ st_text_lines = st.builds(
     confidence=st.one_of(st.none(), st.floats(min_value=0, max_value=1)),
 )
 
+st_labels = st.builds(
+    Label,
+    value=st_simple_text(min_size=1),
+    type=st.one_of(st.none(), st_simple_text(min_size=1)),
+    comments=st.one_of(st.none(), st_simple_text(min_size=1)),
+)
+
 st_text_regions = st.builds(
     TextRegion,
     id=st_simple_text(),
@@ -63,6 +70,7 @@ st_text_regions = st.builds(
     textlines=st.builds(
         lambda lines: {l.id: l for l in lines}, st.lists(st_text_lines)
     ),
+    labels=st.sets(st_labels, max_size=3),
 )
 
 st_images = st.builds(
@@ -85,7 +93,10 @@ def st_pages(draw):
     image = draw(st_images)
     regions = {tr.id: tr for tr in draw(st.lists(st_text_regions))}
     reading_order = draw(st.one_of(st.none(), st.permutations(list(regions.keys()))))
-    return Page(image=image, regions=regions, reading_order=reading_order)
+    labels = draw(st.sets(st_labels, max_size=3))
+    return Page(
+        image=image, regions=regions, reading_order=reading_order, labels=labels
+    )
 
 
 @st.composite
@@ -93,4 +104,7 @@ def st_pages_with_dimensions(draw):
     image = draw(st_images_with_dimensions)
     regions = {tr.id: tr for tr in draw(st.lists(st_text_regions))}
     reading_order = draw(st.one_of(st.none(), st.permutations(list(regions.keys()))))
-    return Page(image=image, regions=regions, reading_order=reading_order)
+    labels = draw(st.sets(st_labels, max_size=3))
+    return Page(
+        image=image, regions=regions, reading_order=reading_order, labels=labels
+    )

@@ -102,6 +102,13 @@ class Coords(DataClassJsonMixin):
 ID: TypeAlias = str
 
 
+@dataclass(frozen=True)
+class Label(DataClassJsonMixin):
+    value: str
+    type: str | None = None
+    comments: str | None = None
+
+
 @dataclass
 class LayoutLine(DataClassJsonMixin):
     id: ID
@@ -188,6 +195,7 @@ class TextLine(LayoutLine, DataClassJsonMixin):
 @dataclass
 class TextRegion(LayoutRegion, DataClassJsonMixin):
     textlines: Mapping[ID, TextLine]  # pyright: ignore[reportIncompatibleVariableOverride]  # fmt: skip
+    labels: set[Label] = field(default_factory=set)
 
     @classmethod
     def from_xml(cls, element: Element) -> "TextRegion":
@@ -208,6 +216,7 @@ class TextRegion(LayoutRegion, DataClassJsonMixin):
             textlines={
                 tl.id: tl for tl in (TextLine.from_xml(tl) for tl in text_lines)
             },
+            labels=_parse_labels(element),
         )
 
     @classmethod
@@ -258,10 +267,31 @@ def _parse_reading_order_group(element: Element) -> list[ID]:
     return result
 
 
+def _parse_label(element: Element) -> Label | None:
+    value = element.attrib.get("value")
+    if value is None:  # Can has Maybe monad and do notation in Python pls?
+        return None
+    return Label(
+        value=value,
+        type=element.attrib.get("type"),
+        comments=element.attrib.get("comments"),
+    )
+
+
+def _parse_labels(element: Element) -> set[Label]:
+    return {
+        parsed_label
+        for labels in find_children(element, "Labels")
+        for label in find_children(labels, "Label")
+        if (parsed_label := _parse_label(label)) is not None
+    }
+
+
 @dataclass
 class Page(PageLayout, DataClassJsonMixin):
     regions: Mapping[ID, TextRegion]  # pyright: ignore[reportIncompatibleVariableOverride]  # fmt: skip
     reading_order: list[ID] | None = field(default=None)
+    labels: set[Label] = field(default_factory=set)
 
     @classmethod
     def from_xml(cls, element: Element) -> "Page":
@@ -299,6 +329,7 @@ class Page(PageLayout, DataClassJsonMixin):
                 tr.id: tr for tr in (TextRegion.from_xml(region) for region in regions)
             },
             reading_order=reading_order,
+            labels=_parse_labels(element),
         )
 
     @classmethod
