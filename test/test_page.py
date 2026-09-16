@@ -9,7 +9,7 @@ from lxml import etree
 from pygexml.strategies import *
 from pygexml.geometry import Point, Box, Polygon
 from pygexml.image import Image
-from pygexml.page import Coords, ID, TextLine, TextRegion, Page
+from pygexml.page import Coords, ID, Label, TextLine, TextRegion, Page
 
 ############## Tests for Coords ####################
 
@@ -258,6 +258,11 @@ def test_textregion_simple_parsing_example() -> None:
     tr = TextRegion.from_xml(etree.fromstring("""
         <TextRegion id="tr-id">
             <Coords points="1,2 8,9"/>
+            <Labels>
+                <Label value="person" type="entity" comments="a person"/>
+                <Label value="named"/>
+            </Labels>
+            <Labels><Label value="person" type="entity"/></Labels>
             <TextLine id="tl-1">
                 <Coords points="17,42 1,2"/>
                 <TextEquiv>
@@ -275,6 +280,11 @@ def test_textregion_simple_parsing_example() -> None:
         """))
     assert tr.id == "tr-id"
     assert tr.coords == Coords.parse("1,2 8,9")
+    assert tr.labels == {
+        Label(value="person", type="entity", comments="a person"),
+        Label(value="named"),
+        Label(value="person", type="entity"),
+    }
     assert tr.textlines == {
         "tl-1": TextLine(
             id="tl-1",
@@ -408,6 +418,7 @@ def test_textregion_serialization_roundtrip() -> None:
         textlines={
             "tl-1": TextLine(id="tl-1", coords=Coords.parse("1,2 3,4"), text="foo")
         },
+        labels={Label(value="person", type="entity")},
     )
     assert TextRegion.from_dict(tr.to_dict()) == tr
 
@@ -418,6 +429,10 @@ def test_textregion_serialization_roundtrip() -> None:
 def test_page_from_element_example() -> None:
     pa = Page.from_xml(etree.fromstring("""
         <Page imageFilename="7895328.jpg" imageWidth="4279" imageHeight="5315">
+            <Labels>
+                <Label value="document" type="genre"/>
+                <Label value="annotated" comments="manual"/>
+            </Labels>
             <TextRegion id="tr-1">
                 <Coords points="1,2 8,9"/>
                 <TextLine id="tl-1">
@@ -453,6 +468,10 @@ def test_page_from_element_example() -> None:
     """))
 
     assert pa.image == Image(filename="7895328.jpg", width=4279, height=5315)
+    assert pa.labels == {
+        Label(value="document", type="genre"),
+        Label(value="annotated", comments="manual"),
+    }
     assert pa.regions == {
         "tr-1": TextRegion(
             id="tr-1",
@@ -1108,8 +1127,9 @@ def test_page_serialization_roundtrip() -> None:
                         id="tl-1", coords=Coords.parse("1,2 3,4"), text="foo"
                     )
                 },
-            )
+            ),
         },
+        labels={Label(value="document", type="genre")},
     )
     assert Page.from_dict(pa.to_dict()) == pa
 

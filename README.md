@@ -30,12 +30,13 @@ All dataclasses are serializable with `to_dict`/`from_dict` and `to_json`/`from_
 | Class | Import from |
 |---|---|
 | `Page` | `pygexml` |
-| `Page`, `TextRegion`, `TextLine`, `Coords` | `pygexml.page` |
+| `Page`, `TextRegion`, `TextLine`, `Coords`, `Label` | `pygexml.page` |
 | `Point`, `Box`, `Polygon` | `pygexml.geometry` |
 
 `Page`, `TextRegion` and `TextLine` each expose `all_text()` and `all_words()` iterators. On `Page`, these respect the PAGE-XML reading order if present.
 Lookups by ID are available via `lookup_region()` and `lookup_textline()`. The reading order is also accessible directly via `regions_ordered()`.
 `TextLine.confidence` is read from PAGE-XML `TextEquiv/@conf`. ALTO confidence is not mapped because its `String/@WC` values are defined per word, below the granularity of this model.
+`Page.labels` and `TextRegion.labels` contain semantic PAGE-XML labels as `set[Label]`. Each `Label` has a required `value` and optional `type` and `comments`.
 
 Refer to the [online API docs][api-docs] for details.
 
